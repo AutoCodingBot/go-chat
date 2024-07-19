@@ -6,12 +6,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+// 主管
 type TomlConfig struct {
 	AppName        string
 	MySQL          MySQLConfig
 	Log            LogConfig
 	StaticPath     PathConfig
 	MsgChannelType MsgChannelType
+	JwtToken       JwtConfig
 }
 
 // MySQL相关配置
@@ -42,6 +44,12 @@ type MsgChannelType struct {
 	ChannelType string
 	KafkaHosts  string
 	KafkaTopic  string
+}
+
+// jwt配置
+type JwtConfig struct {
+	TokenExpireTime int    `toml:"tokenExpireTime"`
+	SecretKey       string `toml:"secretKey"`
 }
 
 var c TomlConfig

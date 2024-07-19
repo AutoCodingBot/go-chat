@@ -604,3 +604,26 @@ bindParse = () => {
         this.dataChunks = []
     }
 ```
+### 奇奇怪怪的问题:
+    包依赖错误:
+    go mod tidy 
+    命令会整理和更新你的 go.mod 和 go.sum 文件，确保所有的依赖都被正确记录且是最新的状态，解决潜在的依赖不一致问题。
+
+### jwt存储位置:
+    Local Storage：
+    优势：易于使用，容量较大，且不会随HTTP请求自动发送到服务器，因此不容易受到CSRF（跨站请求伪造）攻击。
+    劣势：容易受到XSS（跨站脚本）攻击，因为通过JavaScript可以访问Local Storage中的内容。一旦发生XSS攻击，存储在Local Storage中的JWT可能会被窃取。
+    Session Storage：
+    优势：与Local Storage相似，但数据仅在当前浏览器窗口或标签页中有效，关闭窗口或标签页后数据会被清除。这可以提供一定程度上的安全增强，因为数据不跨会话存在。
+    劣势：同样易受XSS攻击，并且不适用于需要长时间保持用户登录状态的场景。
+    Cookies：
+    优势：可以设置HttpOnly属性来防止JavaScript访问，从而减少XSS攻击的风险；并且可以通过设置Secure属性确保仅在HTTPS连接上传输，增加安全性。Cookies还可以自动随请求发送到服务器，简化认证流程。
+    劣势：由于自动发送至服务器，可能导致CSRF攻击的风险增加，除非采取额外的防护措施（如使用SameSite属性）。此外，大小限制比Local Storage小。
+    
+### 额外工作
+    热重启:
+    go install github.com/air-verse/air@latest
+    init:
+        air init
+    run:
+        air -c .air.toml

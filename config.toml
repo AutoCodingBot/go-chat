@@ -3,10 +3,10 @@ appName = "chat_room"
 [mysql]
 host = "127.0.0.1"
 name = "chat"
-password = "root1234"
+user = "root"
+password = "root"
 port = 3306
 tablePrefix = ""
-user = "root"
 
 [log]
 level = "debug"
@@ -20,3 +20,7 @@ channelType = "gochannel"
 
 kafkaHosts = "kafka:9092"
 kafkaTopic = "go-chat-message"
+
+[JwtToken]
+tokenExpireTime = 120
+secretKey = "5bAq6LcAkVh2xPGbYjvXpJiK5zWTg7EnDmFfytQsRcL9uIvG4zWSHabT6N3drM8KJU1qLpP2oF7G9eR5tSvNYCk"

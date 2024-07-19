@@ -13,6 +13,11 @@ import (
 
 // 获取消息列表
 func GetMessage(c *gin.Context) {
+	/*
+		Uuid: 28353ed6-5966-4804-9c52-9b00abd4401e   个人聊天:uuid=>用户uuid;群:uuid=>group uuid
+		FriendUsername: eric
+		MessageType: 1
+	*/
 	log.Logger.Info(c.Query("uuid"))
 	var messageRequest request.MessageRequest
 	err := c.BindQuery(&messageRequest)

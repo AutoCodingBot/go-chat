@@ -13,10 +13,11 @@ type User struct {
 	Password string     `json:"password" form:"password" binding:"required" gorm:"type:varchar(150);not null; comment:'密码'"`
 	Nickname string     `json:"nickname" gorm:"comment:'昵称'"`
 	Avatar   string     `json:"avatar" gorm:"type:varchar(150);comment:'头像'"`
-	Email    string     `json:"email" gorm:"type:varchar(80);column:email;comment:'邮箱'"`
+	Email    string     `json:"-" gorm:"type:varchar(80);column:email;comment:'邮箱'"`
 	CreateAt time.Time  `json:"createAt"`
 	UpdateAt *time.Time `json:"updateAt"`
 	DeleteAt int64      `json:"deleteAt"`
+	Jwt      string     `json:"jwt"`
 }
 
 func (u *User) BeforeUpdate(tx *gorm.DB) error {

@@ -1,31 +1,41 @@
 package router
 
 import (
-	"chat-room/api/v1"
+	v1 "chat-room/api/v1"
 	"chat-room/pkg/common/response"
 	"chat-room/pkg/global/log"
 	"net/http"
+
+	"chat-room/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 func NewRouter() *gin.Engine {
-	gin.SetMode(gin.ReleaseMode)
-
+	gin.SetMode(gin.DebugMode)
+	/*
+		DebugMode indicates gin mode is debug.
+		DebugMode = "debug"
+		// ReleaseMode indicates gin mode is release.
+		ReleaseMode = "release"
+		// TestMode indicates gin mode is test.
+		TestMode = "test"
+	*/
 	server := gin.Default()
 	server.Use(Cors())
 	server.Use(Recovery)
 	// server.Use(gin.Recovery())
 
 	socket := RunSocekt
-
-	group := server.Group("")
+	server.POST("/user/register", v1.Register)
+	group := server.Group("").Use(middleware.AuthMiddleware)
+	// authorized := r.Group("/", AuthRequired()) 中间件添加示例
 	{
 		group.GET("/user", v1.GetUserList)
 		group.GET("/user/:uuid", v1.GetUserDetails)
 		group.GET("/user/name", v1.GetUserOrGroupByName)
-		group.POST("/user/register", v1.Register)
+		// group.POST("/user/register", v1.Register)
 		group.POST("/user/login", v1.Login)
 		group.PUT("/user", v1.ModifyUserInfo)
 
