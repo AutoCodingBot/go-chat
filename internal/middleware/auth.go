@@ -1,11 +1,16 @@
 package middleware
 
 import (
+	"chat-room/config"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
+
+var secretKey = []byte(config.GetConfig().JwtToken.SecretKey)
 
 func AuthMiddleware(c *gin.Context) {
 	//获取报文header中的Authorization
@@ -16,6 +21,19 @@ func AuthMiddleware(c *gin.Context) {
 	if parts[0] != "Bearer" || len(parts) != 2 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token missing"})
 		c.Abort()
+		return
+	}
+	//token有效?
+	token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
+		// 验证Signing Method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
 		return
 	}
 	c.Next()

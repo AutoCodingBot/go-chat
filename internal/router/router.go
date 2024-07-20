@@ -29,6 +29,10 @@ func NewRouter() *gin.Engine {
 
 	socket := RunSocekt
 	server.POST("/user/register", v1.Register)
+	server.POST("/user/login", v1.Login)
+	server.GET("/file/:fileName", v1.GetFile)
+	server.GET("/socket.io", socket)
+
 	group := server.Group("").Use(middleware.AuthMiddleware)
 	// authorized := r.Group("/", AuthRequired()) 中间件添加示例
 	{
@@ -36,14 +40,13 @@ func NewRouter() *gin.Engine {
 		group.GET("/user/:uuid", v1.GetUserDetails)
 		group.GET("/user/name", v1.GetUserOrGroupByName)
 		// group.POST("/user/register", v1.Register)
-		group.POST("/user/login", v1.Login)
+		// group.POST("/user/login", v1.Login)
 		group.PUT("/user", v1.ModifyUserInfo)
 
 		group.POST("/friend", v1.AddFriend)
 
 		group.GET("/message", v1.GetMessage)
 
-		group.GET("/file/:fileName", v1.GetFile)
 		group.POST("/file", v1.SaveFile)
 
 		group.GET("/group/:uuid", v1.GetGroup)
@@ -51,7 +54,6 @@ func NewRouter() *gin.Engine {
 		group.POST("/group/join/:userUuid/:groupUuid", v1.JoinGroup)
 		group.GET("/group/user/:uuid", v1.GetGroupUsers)
 
-		group.GET("/socket.io", socket)
 	}
 	return server
 }
