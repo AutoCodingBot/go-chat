@@ -9,7 +9,7 @@ type MessageResponse struct {
 	Content      string    `json:"content" gorm:"type:varchar(250)"`
 	ContentType  int16     `json:"contentType" gorm:"comment:'消息内容类型：1文字，2语音，3视频'"`
 	CreatedAt    time.Time `json:"createAt"`
-	FromUsername string    `json:"fromUsername" gorm:"column:username"`
+	FromUsername string    `json:"fromUsername"`
 	ToUsername   string    `json:"toUsername"`
 	Avatar       string    `json:"avatar"`
 	Url          string    `json:"url"`

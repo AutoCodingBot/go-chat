@@ -56,7 +56,7 @@ func (u *userService) Login(user *model.User) error {
 	//validate password
 	res := checkPasswordHash(user.Password, queryUser.Password)
 	if !res {
-		return errors.New("Invalid USer OR Password")
+		return errors.New("Invalid User OR Password")
 	}
 	user.Uuid = queryUser.Uuid
 	user.Id = queryUser.Id

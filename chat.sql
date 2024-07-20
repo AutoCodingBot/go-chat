@@ -35,8 +35,9 @@ CREATE TABLE IF NOT EXISTS `user_friends` (
 
 CREATE TABLE `user_messages` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
-  `from_user_id` int DEFAULT NULL COMMENT '发送人ID',
-  `to_user_id` int DEFAULT NULL COMMENT '发送对象ID',
+  `conversation_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '对话标识id,比如eric_sam,concat两个用户昵称(降序)',
+  `from_user_id` int NOT NULL COMMENT '发送人ID',
+  `to_user_id` int NOT NULL COMMENT '发送对象ID',
   `content` varchar(2500) DEFAULT NULL COMMENT '消息内容',
   `url` varchar(350) DEFAULT NULL COMMENT '''文件或者图片地址''',
   `pic` text COMMENT '缩略图',
@@ -50,7 +51,7 @@ CREATE TABLE `user_messages` (
   KEY `idx_messages_to_user_id` (`to_user_id`),
   KEY `idx_user_messages_from_user_id` (`from_user_id`),
   KEY `idx_user_messages_to_user_id` (`to_user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='消息表';
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='消息表';
 
 DROP TABLE IF EXISTS `groups`;
 CREATE TABLE IF NOT EXISTS  `groups` (

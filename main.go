@@ -13,7 +13,7 @@ import (
 
 func main() {
 	log.InitLogger(config.GetConfig().Log.Path, config.GetConfig().Log.Level)
-	log.Logger.Info("config", log.Any("config", config.GetConfig()))
+	// log.Logger.Info("config", log.Any("config", config.GetConfig()))
 
 	if config.GetConfig().MsgChannelType.ChannelType == constant.KAFKA {
 		kafka.InitProducer(config.GetConfig().MsgChannelType.KafkaTopic, config.GetConfig().MsgChannelType.KafkaHosts)

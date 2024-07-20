@@ -84,19 +84,6 @@ func GetUserOrGroupByName(c *gin.Context) {
 }
 
 func GetUserList(c *gin.Context) {
-	// payload, exists := c.Get("jwtPayload")
-
-	// if !exists {
-	// 	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "JWT payload not found in context"})
-	// 	return
-	// }
-
-	// claims, ok := payload.(utils.JwtCustClaim)
-
-	// if !ok {
-	// 	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to assert JWT payload as MapClaims"})
-	// 	return
-	// }
 	claims, err := utils.ParseToken(c)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

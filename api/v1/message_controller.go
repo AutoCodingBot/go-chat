@@ -2,11 +2,11 @@ package v1
 
 import (
 	"net/http"
+	"strconv"
 
 	"chat-room/internal/service"
-	"chat-room/pkg/common/request"
+	"chat-room/internal/utils"
 	"chat-room/pkg/common/response"
-	"chat-room/pkg/global/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,19 +14,25 @@ import (
 // 获取消息列表
 func GetMessage(c *gin.Context) {
 	/*
-		Uuid: 28353ed6-5966-4804-9c52-9b00abd4401e   个人聊天:uuid=>用户uuid;群:uuid=>group uuid
-		FriendUsername: eric
+		Uuid: 28353ed6-5966-4804-9c52-9b00abd4401e
+		FriendUsername: sam
 		MessageType: 1
 	*/
-	log.Logger.Info(c.Query("uuid"))
-	var messageRequest request.MessageRequest
-	err := c.BindQuery(&messageRequest)
-	if nil != err {
-		log.Logger.Error("bindQueryError", log.Any("bindQueryError", err))
+	claims, err := utils.ParseToken(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
-	log.Logger.Info("messageRequest params: ", log.Any("messageRequest", messageRequest))
+	currentUserId := claims.ID
+	currentUserName := claims.UserName
+	messageTypeStr := c.Query("MessageType")
+	messageType, err := strconv.Atoi(messageTypeStr)
+	if err != nil {
+		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
+	}
+	friendUsername := c.Query("FriendUsername")
+	messages, err := service.MessageService.GetMessages(currentUserId, currentUserName, friendUsername, messageType)
 
-	messages, err := service.MessageService.GetMessages(messageRequest)
 	if err != nil {
 		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
 		return
