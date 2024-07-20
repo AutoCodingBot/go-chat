@@ -17,8 +17,8 @@ import (
 // 前端通过文件名称获取文件流，显示文件
 func GetFile(c *gin.Context) {
 	fileName := c.Param("fileName")
-	log.Logger.Info(fileName)
 	data, _ := ioutil.ReadFile(config.GetConfig().StaticPath.FilePath + fileName)
+	c.Writer.Header().Set("Cache-Controler", "public,max-age=86400")
 	c.Writer.Write(data)
 }
 

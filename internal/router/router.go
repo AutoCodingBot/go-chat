@@ -28,10 +28,11 @@ func NewRouter() *gin.Engine {
 	// server.Use(gin.Recovery())
 
 	socket := RunSocekt
+	//无需鉴权
 	server.POST("/user/register", v1.Register)
 	server.POST("/user/login", v1.Login)
+
 	server.GET("/file/:fileName", v1.GetFile)
-	server.GET("/socket.io", socket)
 
 	group := server.Group("").Use(middleware.AuthMiddleware)
 	// authorized := r.Group("/", AuthRequired()) 中间件添加示例
@@ -53,8 +54,9 @@ func NewRouter() *gin.Engine {
 		group.POST("/group/:uuid", v1.SaveGroup)
 		group.POST("/group/join/:userUuid/:groupUuid", v1.JoinGroup)
 		group.GET("/group/user/:uuid", v1.GetGroupUsers)
-
 	}
+	//前端添加报文头部有点麻烦,后期再想想
+	server.GET("/socket.io", socket)
 	return server
 }
 
