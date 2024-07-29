@@ -15,6 +15,9 @@ y.output
 .idea
 _tools/
 
+#env file
+config.toml 
+
 TestMarkdown2Html.html
 
 #test log

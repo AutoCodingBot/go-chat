@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"chat-room/config"
-	"chat-room/internal/service"
+	"chat-room/internal/utils"
 	"chat-room/pkg/common/response"
 	"chat-room/pkg/global/log"
 
@@ -24,9 +24,16 @@ func GetFile(c *gin.Context) {
 
 // 上传头像等文件
 func SaveFile(c *gin.Context) {
+	claims, err := utils.ParseToken(c)
+	if err != nil {
+		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
+		return
+	}
+
 	namePreffix := uuid.New().String()
 
-	userUuid := c.PostForm("uuid")
+	// userUuid := claims.Uuid
+	// objectType := c.PostForm("objectType")
 
 	file, _ := c.FormFile("file")
 	fileName := file.Filename
@@ -35,13 +42,19 @@ func SaveFile(c *gin.Context) {
 
 	newFileName := namePreffix + suffix
 
-	log.Logger.Info("file", log.Any("file name", config.GetConfig().StaticPath.FilePath+newFileName))
-	log.Logger.Info("userUuid", log.Any("userUuid name", userUuid))
+	log.Logger.Info("file", log.Any("file avatar addr", config.GetConfig().StaticPath.FilePath+newFileName))
+	log.Logger.Info("file", log.Any("user change avatar,user:", claims.UserName))
 
-	c.SaveUploadedFile(file, config.GetConfig().StaticPath.FilePath+newFileName)
-	err := service.UserService.ModifyUserAvatar(newFileName, userUuid)
+	err = c.SaveUploadedFile(file, config.GetConfig().StaticPath.FilePath+newFileName)
 	if err != nil {
 		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
+		return
 	}
 	c.JSON(http.StatusOK, response.SuccessMsg(newFileName))
+	// return
+	// err = service.UserService.ModifyUserAvatar(newFileName, claims.ID, objectType)
+	// if err != nil {
+	// 	c.JSON(http.StatusOK, response.FailMsg(err.Error()))
+	// }
+	// c.JSON(http.StatusOK, response.SuccessMsg(newFileName))
 }

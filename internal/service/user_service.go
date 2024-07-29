@@ -154,16 +154,28 @@ func (u *userService) AddFriend(userFriendRequest *request.FriendRequest) error 
 }
 
 // 修改头像
-func (u *userService) ModifyUserAvatar(avatar string, userUuid string) error {
-	var queryUser *model.User
+func (u *userService) ModifyUserAvatar(avatar string, uid int, objectType string) error {
 	db := pool.GetDB()
-	db.First(&queryUser, "uuid = ?", userUuid)
+	if objectType == "user" {
+		var targetModel model.User
+		db.Debug().Model(&targetModel).Where("id=?", uid).Update("avatar", avatar)
 
-	if NULL_ID == queryUser.Id {
-		return errors.New("用户不存在")
+	} else if objectType == "group" {
+		// log.Logger.Debug("2", log.Any("2-1", 2))
+
+		var targetModel model.Group
+		// Is the owner of group?
+		var exiests int64
+		db.Model(&targetModel).Where("user_id = ?", uid).Count(&exiests)
+		if exiests < 1 {
+			return errors.New("U are not the Owner of this group")
+		}
+		db.Model(&targetModel).Update("avatar", avatar)
+
+	} else {
+		return errors.New("未选择对象")
 	}
 
-	db.Model(&queryUser).Update("avatar", avatar)
 	return nil
 }
 

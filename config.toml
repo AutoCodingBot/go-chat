@@ -14,6 +14,8 @@ path = "logs/chat.log"
 
 [staticPath]
 filePath = "web/static/file/"
+avatarPath = "web/static/file/avatar/"
+
 
 [msgChannelType]
 channelType = "gochannel"

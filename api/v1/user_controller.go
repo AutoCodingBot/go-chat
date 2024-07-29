@@ -71,7 +71,6 @@ func GetUserDetails(c *gin.Context) {
 	c.JSON(http.StatusOK, response.SuccessMsg(service.UserService.GetUserDetails(uuid)))
 }
 
-// 通过用户名获取用户信息
 func GetUserOrGroupByName(c *gin.Context) {
 	log.Logger.Debug("user", log.Any("user", "In user ctl"))
 	name := c.DefaultQuery("name", "")
@@ -104,4 +103,8 @@ func AddFriend(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.SuccessMsg(nil))
+}
+
+func UpdateUserProfile(c *gin.Context) {
+
 }

@@ -34,7 +34,8 @@ type LogConfig struct {
 
 // 相关地址信息，例如静态文件地址
 type PathConfig struct {
-	FilePath string
+	FilePath   string
+	AvatarPath string
 }
 
 // 消息队列类型及其消息队列相关信息

@@ -85,8 +85,12 @@ func fetchGroupMessage(db *gorm.DB, currentUserId int, friendUsername string) ([
 	}
 	var messages []response.MessageResponse
 
-	db.Raw("SELECT gm.*,u.username,u.avatar from group_messages  `gm` left join users `u` on u.id = gm.from_user_id where group_id = ?",
-		group.ID).Scan(&messages)
+	db.Table("group_messages AS m").
+		Select("m.id, m.from_user_id,m.content, m.content_type, m.url, m.created_at, u.username AS from_username, u.avatar").
+		Joins("LEFT JOIN users AS u ON m.from_user_id = u.id").
+		Where("m.group_id = ?", group.ID).
+		Scan(&messages)
+
 	// log.Logger.Info("Group messages", log.Any("none", messages))
 
 	return messages, nil

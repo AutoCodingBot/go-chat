@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"chat-room/config"
+	"chat-room/pkg/common/response"
 	"fmt"
 	"net/http"
 	"strings"
@@ -33,7 +34,8 @@ func AuthMiddleware(c *gin.Context) {
 	})
 
 	if err != nil || !token.Valid {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
+		// c.AbortWithStatusJSON(http.StatusOK, response.FailMsg(err.Error()))
+		c.AbortWithStatusJSON(http.StatusOK, response.FailMsg("Invalidate Token ,Try re-logging in"))
 		return
 	}
 	c.Next()
