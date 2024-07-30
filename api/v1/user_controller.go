@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"chat-room/internal/model"
+	userreq "chat-room/internal/request"
 	"chat-room/internal/service"
 	"chat-room/internal/utils"
 	"chat-room/pkg/common/request"
@@ -53,26 +54,30 @@ func Register(c *gin.Context) {
 }
 
 // 更新头像
-func ModifyUserInfo(c *gin.Context) {
-	var user model.User
-	c.ShouldBindJSON(&user)
-	log.Logger.Debug("user", log.Any("user", user))
-	if err := service.UserService.ModifyUserInfo(&user); err != nil {
-		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
+// func ModifyUserInfo(c *gin.Context) {
+// 	var user model.User
+// 	c.ShouldBindJSON(&user)
+// 	log.Logger.Debug("user", log.Any("user", user))
+// 	if err := service.UserService.ModifyUserInfo(&user); err != nil {
+// 		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
+// 		return
+// 	}
+
+// 	c.JSON(http.StatusNoContent, response.SuccessMsg(nil))
+// }
+
+func GetUserDetails(c *gin.Context) {
+	claims, err := utils.ParseToken(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusNoContent, response.SuccessMsg(nil))
-}
-
-func GetUserDetails(c *gin.Context) {
-	uuid := c.Param("uuid")
-
-	c.JSON(http.StatusOK, response.SuccessMsg(service.UserService.GetUserDetails(uuid)))
+	c.JSON(http.StatusOK, response.SuccessMsg(service.UserService.GetUserDetails(claims.Uuid)))
 }
 
 func GetUserOrGroupByName(c *gin.Context) {
-	log.Logger.Debug("user", log.Any("user", "In user ctl"))
+	// log.Logger.Debug("user", log.Any("user", "In user ctl"))
 	name := c.DefaultQuery("name", "")
 	if name == "" {
 		c.JSON(http.StatusOK, response.FailMsg("搜索词不能为空"))
@@ -88,23 +93,48 @@ func GetUserList(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	uuid := claims.Uuid
-	c.JSON(http.StatusOK, response.SuccessMsg(service.UserService.GetUserList(uuid)))
+
+	c.JSON(http.StatusOK, response.SuccessMsg(service.UserService.GetUserList(claims)))
 }
 
 func AddFriend(c *gin.Context) {
+	claims, err := utils.ParseToken(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	var userFriendRequest request.FriendRequest
 	c.ShouldBindJSON(&userFriendRequest)
 
-	err := service.UserService.AddFriend(&userFriendRequest)
+	data, err := service.UserService.AddFriend(claims, &userFriendRequest)
 	if nil != err {
 		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, response.SuccessMsg(nil))
+	c.JSON(http.StatusOK, response.SuccessMsg(data))
 }
 
 func UpdateUserProfile(c *gin.Context) {
+	// log.Logger.Debug("user", log.Any("user", userInfo))
+	// log.Logger.Debug("user", log.Any("err", err))
+	claims, err := utils.ParseToken(c)
+	if err != nil {
+		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
+		return
+	}
+	//validate
+	userInfo, err := userreq.ValidateUserInfo(c)
+	if err != nil {
+		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
+		return
+	}
+	//update
 
+	err = service.UserService.UpdateUserProfile(claims, &userInfo)
+	if err != nil {
+		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, response.SuccessMsg(userInfo))
 }

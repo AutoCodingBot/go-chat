@@ -5,6 +5,8 @@ import (
 
 	"chat-room/internal/dao/pool"
 	"chat-room/internal/model"
+	userreq "chat-room/internal/request"
+	"chat-room/internal/utils"
 	"chat-room/pkg/common/request"
 	"chat-room/pkg/common/response"
 	"chat-room/pkg/errors"
@@ -49,7 +51,7 @@ func (u *userService) Login(user *model.User) error {
 
 	var queryUser *model.User
 	db.First(&queryUser, "username = ?", user.Username)
-	log.Logger.Debug("queryUSer", log.Any("user in service", queryUser))
+	// log.Logger.Debug("queryUSer", log.Any("user in service", queryUser))
 	if queryUser.Id == 0 {
 		return errors.New("Invalid User OR Password")
 	}
@@ -80,11 +82,12 @@ func (u *userService) ModifyUserInfo(user *model.User) error {
 	return nil
 }
 
-func (u *userService) GetUserDetails(uuid string) model.User {
-	var queryUser *model.User
+func (u *userService) GetUserDetails(uuid string) response.UserResponse {
+	var moselUser *model.User
+	var responseUser *response.UserResponse
 	db := pool.GetDB()
-	db.Select("uuid", "username", "nickname", "avatar").First(&queryUser, "uuid = ?", uuid)
-	return *queryUser
+	db.Model(moselUser).Select("uuid", "username", "nickname", "avatar").Where("uuid = ?", uuid).First(&responseUser)
+	return *responseUser
 }
 
 // 通过名称查找群组或者用户
@@ -103,78 +106,132 @@ func (u *userService) GetUserOrGroupByName(name string) response.SearchResponse 
 	return search
 }
 
-func (u *userService) GetUserList(uuid string) []model.User {
+func (u *userService) GetUserList(claims utils.JwtCustClaim) []response.UserResponse {
 	db := pool.GetDB()
 
-	var queryUser *model.User
-	db.First(&queryUser, "uuid = ?", uuid)
-	var nullId int32 = 0
-	if nullId == queryUser.Id {
-		return nil
-	}
+	var users []model.User
+	var modelFriends []model.UserFriend
+	var response []response.UserResponse
+	//get all friends id
+	var activeAddition []int   //发起添加
+	var positiveAddition []int //被添加
+	db.Model(modelFriends).Select("friend_id").Where("user_id =?", claims.ID).Scan(&activeAddition)
+	db.Model(modelFriends).Select("user_id").Where("friend_id =?", claims.ID).Scan(&positiveAddition)
+	uidList := append(activeAddition, positiveAddition...)
+	//fetch friendsInfo
+	db.Model(users).Select("username,uuid,avatar").Where("id IN (?)", uidList).Scan(&response)
+	return response
 
-	var queryUsers []model.User
-	db.Raw("SELECT u.username, u.uuid, u.avatar FROM user_friends AS uf JOIN users AS u ON uf.friend_id = u.id WHERE uf.user_id = ?", queryUser.Id).Scan(&queryUsers)
-
-	return queryUsers
+	// log.Logger.Debug("2", log.Any("2-1", activeAddition))
+	// log.Logger.Debug("2", log.Any("2-2", positiveAddition))
+	db.Debug().Raw(`
+        WITH friends AS (
+            SELECT DISTINCT uf.friend_id AS id
+            FROM user_friends uf
+            WHERE uf.user_id = ? OR uf.friend_id = ?
+        )
+        SELECT u.username, u.uuid, u.avatar
+        FROM users u
+        JOIN friends ON u.id = friends.id
+    `, claims.ID, claims.ID).Scan(&response)
+	/*
+			SELECT
+			u.username,
+			u.uuid,
+			u.avatar
+		FROM
+			( SELECT DISTINCT uf.friend_id AS id FROM user_friends uf WHERE uf.user_id = 6 OR uf.friend_id = 6 ) AS friends
+			JOIN users u ON u.id = friends.id;
+	*/
+	return response
 }
 
-func (u *userService) AddFriend(userFriendRequest *request.FriendRequest) error {
-	var queryUser *model.User
+func (u *userService) AddFriend(userInfo utils.JwtCustClaim, userFriendRequest *request.FriendRequest) (model.User, error) {
 	db := pool.GetDB()
-	db.First(&queryUser, "uuid = ?", userFriendRequest.Uuid)
-	log.Logger.Debug("queryUser", log.Any("queryUser", queryUser))
-	var nullId int32 = 0
-	if nullId == queryUser.Id {
-		return errors.New("用户不存在")
+	//freindInfo
+	var friendInfo *model.User
+	db.First(&friendInfo, "username = ?", userFriendRequest.FriendUsername)
+	if friendInfo.Id == 0 {
+		return model.User{}, errors.New("User did not exists!")
 	}
-
-	var friend *model.User
-	db.First(&friend, "username = ?", userFriendRequest.FriendUsername)
-	if nullId == friend.Id {
-		return errors.New("已添加该好友")
+	//Added already?
+	var friendRelation model.UserFriend
+	var friendExist int64
+	relationId := utils.GenerateConversationId(userInfo.UserName, userFriendRequest.FriendUsername)
+	db.Model(friendRelation).Where("relation_id = ?", relationId).Count(&friendExist)
+	if friendExist > 0 {
+		return model.User{}, errors.New("Friend added already!")
 	}
-
-	userFriend := model.UserFriend{
-		UserId:   queryUser.Id,
-		FriendId: friend.Id,
+	// add friend
+	insertData := model.UserFriend{UserId: int32(userInfo.ID), FriendId: friendInfo.Id, RelationId: relationId}
+	result := db.Create(&insertData) // 通过数据的指针来创建
+	if result.Error != nil {
+		return model.User{}, errors.New("Something goes wrong,try later")
 	}
-
-	var userFriendQuery *model.UserFriend
-	db.First(&userFriendQuery, "user_id = ? and friend_id = ?", queryUser.Id, friend.Id)
-	if userFriendQuery.ID != nullId {
-		return errors.New("该用户已经是你好友")
-	}
-
-	db.AutoMigrate(&userFriend)
-	db.Save(&userFriend)
-	log.Logger.Debug("userFriend", log.Any("userFriend", userFriend))
-
-	return nil
+	return *friendInfo, nil
+	// insertData.ID             // 返回插入数据的主键
+	// result.Error        // 返回 error
+	// result.RowsAffected // 返回插入记录的条数
 }
 
 // 修改头像
-func (u *userService) ModifyUserAvatar(avatar string, uid int, objectType string) error {
+// func (u *userService) ModifyUserAvatar(avatar string, uid int, objectType string) error {
+// 	db := pool.GetDB()
+// 	if objectType == "user" {
+// 		var targetModel model.User
+// 		db.Debug().Model(&targetModel).Where("id=?", uid).Update("avatar", avatar)
+
+// 	} else if objectType == "group" {
+// 		// log.Logger.Debug("2", log.Any("2-1", 2))
+
+// 		var targetModel model.Group
+// 		// Is the owner of group?
+// 		var exiests int64
+// 		db.Model(&targetModel).Where("user_id = ?", uid).Count(&exiests)
+// 		if exiests < 1 {
+// 			return errors.New("U are not the Owner of this group")
+// 		}
+// 		db.Model(&targetModel).Update("avatar", avatar)
+
+// 	} else {
+// 		return errors.New("未选择对象")
+// 	}
+
+//		return nil
+//	}
+func (u *userService) UpdateUserProfile(claims utils.JwtCustClaim, userInfo *userreq.UserInfo) error {
 	db := pool.GetDB()
-	if objectType == "user" {
-		var targetModel model.User
-		db.Debug().Model(&targetModel).Where("id=?", uid).Update("avatar", avatar)
 
-	} else if objectType == "group" {
-		// log.Logger.Debug("2", log.Any("2-1", 2))
+	var queryUser *model.User
+	db.First(&queryUser, "id = ?", claims.ID)
 
-		var targetModel model.Group
-		// Is the owner of group?
-		var exiests int64
-		db.Model(&targetModel).Where("user_id = ?", uid).Count(&exiests)
-		if exiests < 1 {
-			return errors.New("U are not the Owner of this group")
-		}
-		db.Model(&targetModel).Update("avatar", avatar)
-
-	} else {
-		return errors.New("未选择对象")
+	//edit update data
+	encryptedPassword, err := hashPassword(userInfo.NewPassword)
+	if err != nil {
+		return errors.New("Something goes wrong")
 	}
+	// currentEncryptPassword, err := hashPassword(userInfo.CurrentPassword)
+	// log.Logger.Debug("2", log.Any("db_password", queryUser.Password))
+	// log.Logger.Debug("2", log.Any("encryptedPassword", encryptedPassword))
+
+	// if err != nil {
+	// 	return errors.New("Something goes wrong")
+	// }
+	// //
+	//update
+	var updateData model.User
+	if userInfo.NewPassword != "" { //update with password
+		//validate password
+		passwprdCheck := checkPasswordHash(userInfo.CurrentPassword, queryUser.Password)
+		if !passwprdCheck {
+			return errors.New("Incorrect Password")
+		}
+		updateData.Avatar = userInfo.Avatar
+		updateData.Password = encryptedPassword
+	} else { //update without password
+		updateData.Avatar = userInfo.Avatar
+	}
+	db.Model(&queryUser).Where("id = ?", claims.ID).Updates(updateData)
 
 	return nil
 }

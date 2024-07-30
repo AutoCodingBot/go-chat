@@ -44,3 +44,7 @@
 
 ### 图片缓存
     报文头已告知浏览器进行缓存(Cache-Controler  public,max-age=86400),但刷新页面后,前端图片依然从服务器获取
+
+
+### 原生sql输出
+    Debug()
