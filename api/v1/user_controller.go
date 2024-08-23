@@ -10,6 +10,7 @@ import (
 	"chat-room/pkg/common/request"
 	"chat-room/pkg/common/response"
 	"chat-room/pkg/global/log"
+	"chat-room/pkg/global/state"
 
 	"github.com/gin-gonic/gin"
 )
@@ -129,12 +130,24 @@ func UpdateUserProfile(c *gin.Context) {
 		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
 		return
 	}
-	//update
 
+	//update
 	err = service.UserService.UpdateUserProfile(claims, &userInfo)
 	if err != nil {
 		c.JSON(http.StatusOK, response.FailMsg(err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, response.SuccessMsg(userInfo))
+}
+
+func UserOnlineStatus(c *gin.Context) {
+	log.Logger.Debug("debug", log.Any("debug", "hit me"))
+
+	uuid := c.Param("uuid")
+	if uuid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing UUID parameter"})
+		return
+	}
+	useOnlineStatus := state.UserOnlineStatus(uuid)
+	c.JSON(http.StatusOK, response.SuccessMsg(useOnlineStatus))
 }

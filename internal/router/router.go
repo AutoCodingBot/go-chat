@@ -37,10 +37,12 @@ func NewRouter() *gin.Engine {
 	group := server.Group("").Use(middleware.AuthMiddleware)
 	// authorized := r.Group("/", AuthRequired()) 中间件添加示例
 	{
-		group.GET("/user", v1.GetUserList)
+		group.GET("/user/friends", v1.GetUserList)
 		group.PUT("/user", v1.UpdateUserProfile)
-		group.GET("/user/:uuid", v1.GetUserDetails)
+		group.GET("/user/info", v1.GetUserDetails)
 		group.GET("/user/name", v1.GetUserOrGroupByName)
+		group.GET("/user/online-user/:uuid", v1.UserOnlineStatus)
+
 		// group.POST("/user/register", v1.Register)
 		// group.POST("/user/login", v1.Login)
 		// group.PUT("/user", v1.ModifyUserInfo)

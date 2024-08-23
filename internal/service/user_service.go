@@ -210,17 +210,10 @@ func (u *userService) UpdateUserProfile(claims utils.JwtCustClaim, userInfo *use
 	if err != nil {
 		return errors.New("Something goes wrong")
 	}
-	// currentEncryptPassword, err := hashPassword(userInfo.CurrentPassword)
-	// log.Logger.Debug("2", log.Any("db_password", queryUser.Password))
-	// log.Logger.Debug("2", log.Any("encryptedPassword", encryptedPassword))
-
-	// if err != nil {
-	// 	return errors.New("Something goes wrong")
-	// }
-	// //
 	//update
 	var updateData model.User
-	if userInfo.NewPassword != "" { //update with password
+	//update with password
+	if userInfo.NewPassword != "" {
 		//validate password
 		passwprdCheck := checkPasswordHash(userInfo.CurrentPassword, queryUser.Password)
 		if !passwprdCheck {
@@ -228,7 +221,8 @@ func (u *userService) UpdateUserProfile(claims utils.JwtCustClaim, userInfo *use
 		}
 		updateData.Avatar = userInfo.Avatar
 		updateData.Password = encryptedPassword
-	} else { //update without password
+		//update without password
+	} else {
 		updateData.Avatar = userInfo.Avatar
 	}
 	db.Model(&queryUser).Where("id = ?", claims.ID).Updates(updateData)

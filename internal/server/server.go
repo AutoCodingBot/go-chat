@@ -6,6 +6,7 @@ import (
 	"chat-room/pkg/common/constant"
 	"chat-room/pkg/common/util"
 	"chat-room/pkg/global/log"
+	"chat-room/pkg/global/state"
 	"chat-room/pkg/protocol"
 	"encoding/base64"
 	"io/ioutil"
@@ -47,6 +48,7 @@ func (s *Server) Start() {
 		select {
 		case conn := <-s.Register:
 			log.Logger.Info("login", log.Any("login", "new user login in"+conn.Name))
+			state.AppendOnline(conn.Name)
 			s.Clients[conn.Name] = conn
 			msg := &protocol.Message{
 				From:    "System",
@@ -58,6 +60,7 @@ func (s *Server) Start() {
 
 		case conn := <-s.Ungister:
 			log.Logger.Info("loginout", log.Any("loginout", conn.Name))
+			state.RemoveOnline(conn.Name)
 			if _, ok := s.Clients[conn.Name]; ok {
 				close(conn.Send)
 				delete(s.Clients, conn.Name)

@@ -17,11 +17,7 @@ type UserInfo struct {
 func ValidateUserInfo(c *gin.Context) (UserInfo, error) {
 	var userInfo UserInfo
 	c.ShouldBindJSON(&userInfo)
-	// //nickname
-	// if len(userInfo.NickName) < 5 || len(userInfo.NickName) > 50 {
-	// 	error := errors.New("Length of nickname should between 5 and 50 characters")
-	// 	return userInfo, error
-	// }
+
 	//one of password is empty
 	if (userInfo.CurrentPassword == "" && userInfo.NewPassword != "") || (userInfo.CurrentPassword != "" && userInfo.NewPassword == "") {
 		error := errors.New("Both password is required")
