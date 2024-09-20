@@ -41,7 +41,7 @@ func NewRouter() *gin.Engine {
 		group.PUT("/user", v1.UpdateUserProfile)
 		group.GET("/user/info", v1.GetUserDetails)
 		group.GET("/user/name", v1.GetUserOrGroupByName)
-		group.GET("/user/online-user/:uuid", v1.UserOnlineStatus)
+		group.GET("/user/online-status/:uuid", v1.UserOnlineStatus)
 
 		// group.POST("/user/register", v1.Register)
 		// group.POST("/user/login", v1.Login)

@@ -13,4 +13,6 @@ type MessageResponse struct {
 	ToUsername   string    `json:"toUsername"`
 	Avatar       string    `json:"avatar"`
 	Url          string    `json:"url"`
+	// OnlineStatus bool      `json:"onlineStatus"`
+	// LatestMsg    string    `json:"latestMsg"`
 }

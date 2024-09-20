@@ -94,8 +94,11 @@ func GetUserList(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, response.SuccessMsg(service.UserService.GetUserList(claims)))
+	friendsSlice := service.UserService.GetUserList(claims)
+	for index, val := range friendsSlice {
+		friendsSlice[index].OnlineStatus = state.UserOnlineStatus(val.Uuid)
+	}
+	c.JSON(http.StatusOK, response.SuccessMsg(friendsSlice))
 }
 
 func AddFriend(c *gin.Context) {

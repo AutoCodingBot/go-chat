@@ -106,12 +106,12 @@ func (u *userService) GetUserOrGroupByName(name string) response.SearchResponse 
 	return search
 }
 
-func (u *userService) GetUserList(claims utils.JwtCustClaim) []response.UserResponse {
+func (u *userService) GetUserList(claims utils.JwtCustClaim) []response.UserFriendResponse {
 	db := pool.GetDB()
 
 	var users []model.User
 	var modelFriends []model.UserFriend
-	var response []response.UserResponse
+	var response []response.UserFriendResponse
 	//get all friends id
 	var activeAddition []int   //发起添加
 	var positiveAddition []int //被添加
@@ -120,29 +120,6 @@ func (u *userService) GetUserList(claims utils.JwtCustClaim) []response.UserResp
 	uidList := append(activeAddition, positiveAddition...)
 	//fetch friendsInfo
 	db.Model(users).Select("username,uuid,avatar").Where("id IN (?)", uidList).Scan(&response)
-	return response
-
-	// log.Logger.Debug("2", log.Any("2-1", activeAddition))
-	// log.Logger.Debug("2", log.Any("2-2", positiveAddition))
-	db.Debug().Raw(`
-        WITH friends AS (
-            SELECT DISTINCT uf.friend_id AS id
-            FROM user_friends uf
-            WHERE uf.user_id = ? OR uf.friend_id = ?
-        )
-        SELECT u.username, u.uuid, u.avatar
-        FROM users u
-        JOIN friends ON u.id = friends.id
-    `, claims.ID, claims.ID).Scan(&response)
-	/*
-			SELECT
-			u.username,
-			u.uuid,
-			u.avatar
-		FROM
-			( SELECT DISTINCT uf.friend_id AS id FROM user_friends uf WHERE uf.user_id = 6 OR uf.friend_id = 6 ) AS friends
-			JOIN users u ON u.id = friends.id;
-	*/
 	return response
 }
 

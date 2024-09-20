@@ -48,5 +48,5 @@
 ### 在线用户信息采集
     新建常驻变量global/state/UserState (slice),
 
-### 原生sql输出
+### 工具:原生sql输出
     Debug()
